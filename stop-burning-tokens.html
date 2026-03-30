@@ -500,7 +500,6 @@
           <span class="ba-label" onclick="copyText(this, '1. Can you make this paragraph shorter? 2. Suggest a better headline. 3. What is missing from this brief? One send. One context load. Faster and cheaper.')">
             <span class="copy-icon-mask"></span> Copy prompt
           </span>
-          <span class="ba-desc">Claude sees relationships between questions for unified answers.</span>
         </div>
       </div>
 
@@ -558,11 +557,15 @@
     });
 
     // Reusable Copy Logic
+    let toastTimer;
     function copyText(btn, text) {
       navigator.clipboard.writeText(text).then(() => {
         const toast = document.getElementById("toast");
+        toast.classList.remove("show");
+        void toast.offsetWidth; // reflow to restart animation
         toast.classList.add("show");
-        setTimeout(() => { toast.classList.remove("show"); }, 3000);
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => { toast.classList.remove("show"); }, 3000);
       });
     }
 
