@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -36,20 +36,6 @@
       --card-shadow: 0 4px 4px rgba(0,0,0,0.05);
     }
 
-    [data-theme="dark"] {
-      --bg: #0f0f0d;
-      --bg-subtle: #161614;
-      --border: #262622;
-      --text: #e8e8e2;
-      --text-muted: #7a7a72;
-      --text-faint: #3e3e38;
-      --tag-bg: #1e1e1a;
-      --tag-text: #8a8a82;
-      --hover-bg: #161614;
-      --toggle-bg: #e8e8e4;
-      --link: #e8e8e2;
-      --card-shadow: 0 4px 4px rgba(0,0,0,0.05);
-    }
 
     html { font-size: 15px; }
 
@@ -99,8 +85,7 @@
       gap: 16px;
     }
 
-    /* ── Toggle — Default (light mode): dark pill, plain knob left
-                  Sunshine (dark mode): light pill, sun icon knob right ── */
+    /* ── Toggle ── */
     .theme-toggle {
       width: 32px;
       height: 18px;
@@ -113,7 +98,6 @@
       transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* Knob */
     .theme-toggle::after {
       content: '';
       position: absolute;
@@ -129,24 +113,34 @@
         background-image 0.2s ease;
     }
 
-    /* Sunshine state */
-    [data-theme="dark"] .theme-toggle {
-      background: #e8e8e4;
-    }
-    [data-theme="dark"] .theme-toggle::after {
+    /* Sunshine-on state — knob slides right and shows sun icon */
+    .sunshine-on .theme-toggle { background: #FFE138; }
+    .sunshine-on .theme-toggle::after {
       transform: translateX(14px);
-      background: #b0b0a8;
-      /* Sun icon: circle + 8 rays */
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 14 14'%3E%3Ccircle cx='7' cy='7' r='2.4' fill='%231a1a18'/%3E%3Cg stroke='%231a1a18' stroke-width='1.3' stroke-linecap='round'%3E%3Cline x1='7' y1='0.5' x2='7' y2='2.8'/%3E%3Cline x1='7' y1='11.2' x2='7' y2='13.5'/%3E%3Cline x1='0.5' y1='7' x2='2.8' y2='7'/%3E%3Cline x1='11.2' y1='7' x2='13.5' y2='7'/%3E%3Cline x1='2.2' y1='2.2' x2='3.9' y2='3.9'/%3E%3Cline x1='10.1' y1='10.1' x2='11.8' y2='11.8'/%3E%3Cline x1='11.8' y1='2.2' x2='10.1' y2='3.9'/%3E%3Cline x1='3.9' y1='10.1' x2='2.2' y2='11.8'/%3E%3C/g%3E%3C/svg%3E");
+      background: #fff8e1;
       background-repeat: no-repeat;
       background-position: center;
       background-size: 14px 14px;
     }
 
+    /* ── Sun overlay video ── */
+    #sun-overlay {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0;
+      mix-blend-mode: multiply;   /* lets the shadow darken the page naturally */
+      transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .sunshine-on #sun-overlay { opacity: 0.4; }
+
     /* ── Hero header ── */
     .hero {
       padding: 64px 0 48px;
-      border-bottom: 1px solid var(--border);
     }
 
     .hero-title {
@@ -200,14 +194,13 @@
 
     /* ── Card grid ── */
     .card-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
+      columns: 3;
+      column-gap: 16px;
       padding-bottom: 72px;
     }
 
-    @media (max-width: 800px) { .card-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 520px) { .card-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 800px) { .card-grid { columns: 2; } }
+    @media (max-width: 520px) { .card-grid { columns: 1; } }
 
     /* ── Card ── */
     .card {
@@ -222,6 +215,11 @@
         box-shadow 0.22s ease,
         border-color 0.15s ease;
       animation: cardIn 0.3s ease both;
+      /* Masonry: prevent card from splitting across columns, add row spacing */
+      break-inside: avoid;
+      margin-bottom: 16px;
+      display: inline-block; /* required for columns layout to respect height */
+      width: 100%;
     }
 
     .card:hover {
@@ -250,7 +248,7 @@
     /* ── Card thumbnail ── */
     .card-thumb {
       width: 100%;
-      aspect-ratio: 16 / 9;
+      /* No fixed aspect-ratio — height hugs the natural image height for masonry flow */
       background: var(--bg-subtle);
       display: flex;
       align-items: center;
@@ -261,8 +259,7 @@
 
     .card-thumb img {
       width: 100%;
-      height: 100%;
-      object-fit: cover;
+      height: auto; /* natural image height, no cropping */
       display: block;
       transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
@@ -345,7 +342,6 @@
 
     /* ── Empty state ── */
     .empty-state {
-      grid-column: 1 / -1;
       text-align: center;
       padding: 64px 0;
       color: var(--text-faint);
@@ -382,6 +378,257 @@
     }
 
     .hidden { display: none !important; }
+
+    /* ── Writing section ── */
+    .writing-section {
+      padding: 52px 0 0;
+    }
+
+    .writing-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 10px;
+      margin-bottom: 0;
+    }
+
+    .writing-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-faint);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .writing-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .writing-list:hover .writing-row {
+      opacity: 0.3;
+    }
+
+    .writing-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 13px 0;
+      border-bottom: 1px solid var(--border);
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+      transition: opacity 0.14s ease;
+    }
+
+    .writing-list:hover .writing-row:hover {
+      opacity: 1;
+    }
+
+    .writing-row-left {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .writing-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      letter-spacing: -0.01em;
+      line-height: 1.35;
+      transition: opacity 0.14s ease;
+    }
+
+    .writing-tag-new {
+      height: 7px;
+      width: auto;
+      flex-shrink: 0;
+      display: inline-block;
+      vertical-align: middle;
+      position: relative;
+    }
+
+    .writing-date {
+      font-size: 12px;
+      color: var(--text-faint);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* ── Section separator before curation ── */
+    .curation-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 48px 0 0;
+    }
+
+    .curation-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-faint);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* ── View toggle + AI filter ── */
+    .controls-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .view-toggle {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      background: var(--tag-bg);
+      border-radius: 8px;
+      padding: 3px;
+    }
+
+    .view-btn {
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-faint);
+      transition: background 0.15s, color 0.15s;
+      padding: 0;
+    }
+    .view-btn:hover { color: var(--text-muted); }
+    .view-btn.active { background: var(--bg); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+    .ai-filter-btn {
+      width: 34px;
+      height: 34px;
+      border: none;
+      background: var(--tag-bg);
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-faint);
+      transition: background 0.15s, color 0.15s;
+      padding: 0;
+      flex-shrink: 0;
+    }
+    .ai-filter-btn:hover { color: var(--text-muted); }
+    .ai-filter-btn.active { background: var(--text); color: var(--bg); }
+
+    /* ── List layout ── */
+    .card-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      padding-bottom: 72px;
+    }
+
+    .list-row {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      padding: 18px 0;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.12s;
+      border-radius: 0;
+      animation: cardIn 0.3s ease both;
+    }
+    .list-row:first-child { border-top: none; }
+    .list-row:hover { background: var(--hover-bg); padding-left: 8px; padding-right: 8px; margin: 0 -8px; border-radius: 8px; }
+
+    .list-thumb {
+      width: 100px;
+      height: 60px;
+      border-radius: 8px;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: var(--tag-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .list-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .list-thumb-text {
+      font-size: 9px;
+      font-weight: 500;
+      color: var(--text-faint);
+      text-align: center;
+      padding: 4px;
+      line-height: 1.3;
+    }
+
+    .list-body {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .list-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text);
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .list-desc {
+      font-size: 12px;
+      color: var(--text-faint);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .list-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .list-tag {
+      font-size: 10px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: var(--tag-bg);
+      color: var(--tag-text);
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .list-date {
+      font-size: 10.5px;
+      color: var(--text-faint);
+      white-space: nowrap;
+    }
+
+    @media (max-width: 600px) {
+      .list-meta { display: none; }
+    }
+
 
     /* ── Hero caption interactive keywords ── */
     .hero-caption {
@@ -472,7 +719,7 @@
 
     <!-- Hero -->
     <div class="hero">
-      <h1 class="hero-title">Product Designer's Vault</h1>
+      <h1 class="hero-title">Think, learn, craft design</h1>
       <p class="hero-caption">
         A highly curated list of resources. From my blog posts to 
         <span class="caption-keyword" id="kw-ai">AI vibecoding
@@ -491,30 +738,77 @@
           </span>
         </span>
       </p>
+      <div style="padding-top: 8px;">
+        <span class="writing-label">Last updated 30 March, 2026</span>
+      </div>
+    </div>
+
+    <!-- Writing Section -->
+    <div class="writing-section">
+      <div class="writing-header">
+        <span class="writing-label">Writing on Vibe Coding</span>
+      </div>
+      <ul class="writing-list" id="writingList"></ul>
+    </div>
+
+    <!-- Curation header -->
+    <div class="curation-header">
+      <span class="curation-label">Resources</span>
     </div>
 
     <!-- Controls -->
     <div class="controls">
       <div class="type-filters" id="typeFilters">
         <button class="filter-btn active" data-type="all">All</button>
-        <button class="filter-btn" data-type="articles">Articles</button>
         <button class="filter-btn" data-type="inspiration">Inspiration</button>
         <button class="filter-btn" data-type="products">Products</button>
         <button class="filter-btn" data-type="videos">Videos</button>
         <button class="filter-btn" data-type="podcast">Podcast</button>
         <button class="filter-btn" data-type="other">Other</button>
       </div>
+      <div class="controls-right">
+        <button class="ai-filter-btn" id="aiFilterBtn" aria-label="Filter AI entries">
+          <svg width="14" height="11" viewBox="0 0 18 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M13.5 14H10.2L9.08 9.9H3.76L2.64 14H0L4.64 0H9.36L13.5 14ZM6.48 1.68L4.6 8.22H8.3L6.52 1.68H6.48Z" fill="currentColor"/>
+            <path d="M17.5 0V14H14.5V0H17.5Z" fill="currentColor"/>
+          </svg>
+        </button>
+        <div class="view-toggle" id="viewToggle">
+          <button class="view-btn active" data-view="gallery" aria-label="Gallery view">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="1" y="1" width="5" height="5" rx="1.5" fill="currentColor"/>
+              <rect x="8" y="1" width="5" height="5" rx="1.5" fill="currentColor"/>
+              <rect x="1" y="8" width="5" height="5" rx="1.5" fill="currentColor"/>
+              <rect x="8" y="8" width="5" height="5" rx="1.5" fill="currentColor"/>
+            </svg>
+          </button>
+          <button class="view-btn" data-view="list" aria-label="List view">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="1" y="2" width="3" height="3" rx="1" fill="currentColor"/>
+              <rect x="6" y="2.5" width="7" height="2" rx="1" fill="currentColor"/>
+              <rect x="1" y="6" width="3" height="3" rx="1" fill="currentColor"/>
+              <rect x="6" y="6.5" width="7" height="2" rx="1" fill="currentColor"/>
+              <rect x="1" y="10" width="3" height="3" rx="1" fill="currentColor"/>
+              <rect x="6" y="10.5" width="7" height="2" rx="1" fill="currentColor"/>
+            </svg>
+          </button>
+        </div>
+      </div>
     </div>
 
-    <!-- Card Grid -->
-    <div class="card-grid" id="cardGrid"></div>
+    <!-- Card Grid / List -->
+    <div id="cardGrid"></div>
+
+    <!-- Sun overlay -->
+    <video id="sun-overlay" src="Assets/Videos/Backgroundshadow.mp4" autoplay loop muted playsinline></video>
 
     <!-- Footer -->
     <footer>
-      <span class="footer-name">Cherry's Vault, created with Claude</span>
+      <span class="footer-name">Cherry's Vault, supported by iced lemon tea & built with Claude.</span>
       <div class="footer-links">
-        <a href="#" class="footer-link">Twitter</a>
-        <a href="#" class="footer-link">GitHub</a>
+        <a href='' class="footer-link">X</a>
+        <a href='https://www.cherryhu.com/'class="footer-link">Portfolio</a>
+        <a href='https://linkedin.com/in/cherryhu0604' class="footer-link">LinkedIn</a>
       </div>
     </footer>
 
@@ -524,6 +818,83 @@
     // ── Data ──
     const entries = [
       {
+        id: 'weavy-ai',
+        title: 'Weavy',
+        category: 'products',
+        date: '2026-03-30',
+        desc: 'Transform your creative vision into scalable workflows. Integrate AI models and editing tools in one seamless, node-based platform.',
+        href: 'https://www.weavy.ai/',
+        external: true,
+        image: 'Assets/Images/Weavy.avif',
+        ai: true
+      },
+      {
+        id: 'elevenlabs',
+        title: 'ElevenLabs',
+        category: 'products',
+        date: '2026-03-30',
+        desc: 'Create lifelike speech with AI voice generation and voice agents. 5,000+ voices across 70+ languages.',
+        href: 'https://elevenlabs.io/',
+        external: true,
+        image: 'Assets/Images/ElevenLabs.png',
+        ai: true
+      },
+      {
+        id: 'suno',
+        title: 'Suno',
+        category: 'products',
+        date: '2026-03-30',
+        desc: 'Create stunning original music for free in seconds using AI. Make your own masterpieces and share with the world.',
+        href: 'https://suno.com/home',
+        external: true,
+        image: 'Assets/Images/Suno.jpg',
+        ai: true
+      },
+      {
+        id: 'cosmos',
+        title: 'Cosmos',
+        category: 'products',
+        date: '2026-03-30',
+        desc: 'A home for curating your universe — collect, organise, and share the things that matter to you.',
+        href: 'https://www.cosmos.so/home',
+        external: true,
+        image: 'Assets/Images/Cosmos.png',
+        ai: false
+      },
+      {
+        id: 'notebooklm',
+        title: 'NotebookLM',
+        category: 'products',
+        date: '2026-03-30',
+        desc: 'Google\'s AI research tool and thinking partner. Analyse your sources, turn complexity into clarity, and transform your content.',
+        href: 'https://notebooklm.google/',
+        external: true,
+        image: 'Assets/Images/NotebookLM.png',
+        ai: true
+      },
+      {
+        id: 'google-labs',
+        title: 'Google Labs',
+        category: 'products',
+        date: '2026-03-30',
+        desc: 'Google\'s home for AI experiments and innovative tools. Explore the future of AI responsibly.',
+        href: 'https://labs.google/',
+        external: true,
+        image: 'Assets/Images/GoogleLabs.webp',
+        ai: true
+      },
+      {
+        id: 'google-stitch',
+        title: 'Stitch by Google',
+        category: 'products',
+        date: '2026-03-30',
+        desc: 'Design with AI — Stitch generates UIs for mobile and web applications, making design ideation fast and easy.',
+        href: 'https://stitch.withgoogle.com/',
+        external: true,
+        image: 'Assets/Images/GoogleStitch.png',
+        ai: true
+      },
+      {
         id: 'stop-burning-tokens',
         title: 'Stop Burning Tokens in Claude',
         category: 'articles',
@@ -531,7 +902,8 @@
         desc: 'Five habits that cut your Claude token usage by up to 90%.',
         href: 'stop-burning-tokens.html',
         external: false,
-        image: 'Assets/Images/savetoken.png'
+        image: 'Assets/Images/savetoken.png',
+        ai: true
       },
       {
         id: 'breaking-ai-vibe',
@@ -541,7 +913,8 @@
         desc: 'A 3-Step guide to professional UI design',
         href: 'breaking-ai-vibe.html',
         external: false,
-        image: 'Assets/Images/banishaivibe.png'
+        image: 'Assets/Images/banishaivibe.png',
+        ai: true
       },
       {
         id: 'dive-club',
@@ -611,7 +984,8 @@
         desc: 'UI/UX design inspiration and reference resources for designers and developers working on their next project.',
         href: 'https://refero.design/mcp',
         external: true,
-        image: 'Assets/Images/ReferoDesign.png'
+        image: 'Assets/Images/ReferoDesign.png',
+        ai: true
       },
       {
         id: 'site-of-sites',
@@ -657,6 +1031,8 @@
 
     // ── State ──
     let activeType = 'all';
+    let activeView = localStorage.getItem('view') || 'gallery';
+    let aiOnly = false;
 
     // ── Placeholder colors per category ──
     const thumbColors = {
@@ -671,60 +1047,136 @@
       return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
     }
 
+    function navigate(entry) {
+      if (entry.external) {
+        window.open(entry.href, '_blank');
+      } else {
+        document.body.style.transition = 'opacity 0.18s ease';
+        document.body.style.opacity = '0';
+        setTimeout(() => { window.location.href = entry.href; }, 180);
+      }
+    }
+
     function renderCards() {
       const grid = document.getElementById('cardGrid');
-      const filtered = activeType === 'all'
-        ? [...entries]
-        : entries.filter(e => e.category === activeType);
+      let filtered = activeType === 'all'
+        ? entries.filter(e => e.category !== 'articles')
+        : entries.filter(e => e.category === activeType && e.category !== 'articles');
+      if (aiOnly) filtered = filtered.filter(e => e.ai);
 
       filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
 
       grid.innerHTML = '';
 
       if (filtered.length === 0) {
+        grid.className = 'card-grid';
         grid.innerHTML = '<div class="empty-state">No entries found.</div>';
         return;
       }
 
-      filtered.forEach((entry, i) => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.style.animationDelay = `${i * 0.04}s`;
+      if (activeView === 'list') {
+        grid.className = 'card-list';
+        filtered.forEach((entry, i) => {
+          const row = document.createElement('div');
+          row.className = 'list-row';
+          row.style.animationDelay = `${i * 0.03}s`;
 
-        const extIcon = entry.external ? `<span class="ext-icon">↗</span>` : '';
-        const colors = thumbColors[entry.category] || thumbColors.other;
+          const colors = thumbColors[entry.category] || thumbColors.other;
+          const thumbHtml = entry.image
+            ? `<img src="${entry.image}" alt="${entry.title}" loading="lazy" />`
+            : `<span class="list-thumb-text">${entry.title}</span>`;
 
-        let thumbHtml;
-        if (entry.image) {
-          thumbHtml = `<div class="card-thumb"><img src="${entry.image}" alt="${entry.title}" loading="lazy" /></div>`;
-        } else {
-          thumbHtml = `<div class="card-thumb" style="background:${colors.bg}"><span class="card-thumb-text" style="color:${colors.text}">${entry.title}</span></div>`;
-        }
+          const extIcon = entry.external ? `<span class="ext-icon">↗</span>` : '';
 
-        card.innerHTML = `
-          ${thumbHtml}
-          <div class="card-body">
-            <div class="card-title">${entry.title}${extIcon}</div>
-            ${entry.desc ? `<div class="card-desc">${entry.desc}</div>` : ''}
-            <div class="card-meta">
-              <span class="card-tag">${entry.category}</span>
-              <span class="card-date">${formatDate(entry.date)}</span>
+          row.innerHTML = `
+            <div class="list-thumb">${thumbHtml}</div>
+            <div class="list-body">
+              <div class="list-title">${entry.title}${extIcon}</div>
+              ${entry.desc ? `<div class="list-desc">${entry.desc}</div>` : ''}
             </div>
-          </div>
+            <div class="list-meta">
+              <span class="list-tag">${entry.category}</span>
+              <span class="list-date">${formatDate(entry.date)}</span>
+            </div>
+          `;
+
+          row.addEventListener('click', () => navigate(entry));
+          grid.appendChild(row);
+        });
+      } else {
+        grid.className = 'card-grid';
+        filtered.forEach((entry, i) => {
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.style.animationDelay = `${i * 0.04}s`;
+
+          const extIcon = entry.external ? `<span class="ext-icon">↗</span>` : '';
+          const colors = thumbColors[entry.category] || thumbColors.other;
+
+          let thumbHtml;
+          if (entry.image) {
+            thumbHtml = `<div class="card-thumb"><img src="${entry.image}" alt="${entry.title}" loading="lazy" /></div>`;
+          } else {
+            thumbHtml = `<div class="card-thumb" style="background:${colors.bg}"><span class="card-thumb-text" style="color:${colors.text}">${entry.title}</span></div>`;
+          }
+
+          card.innerHTML = `
+            ${thumbHtml}
+            <div class="card-body">
+              <div class="card-title">${entry.title}${extIcon}</div>
+              ${entry.desc ? `<div class="card-desc">${entry.desc}</div>` : ''}
+              <div class="card-meta">
+                <span class="card-tag">${entry.category}</span>
+                <span class="card-date">${formatDate(entry.date)}</span>
+              </div>
+            </div>
+          `;
+
+          card.addEventListener('click', () => navigate(entry));
+          grid.appendChild(card);
+        });
+      }
+    }
+
+    // ── Writing section ──
+    function renderWriting() {
+      const list = document.getElementById('writingList');
+      const articles = entries
+        .filter(e => e.category === 'articles')
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      list.innerHTML = '';
+
+      // Mark newest article
+      const newestDate = articles[0]?.date;
+
+      articles.forEach(entry => {
+        const li = document.createElement('li');
+        const isNew = entry.date === newestDate;
+        const d = new Date(entry.date + 'T00:00:00');
+        const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+        li.innerHTML = `
+          <a class="writing-row" href="${entry.href}"${entry.external ? ' target="_blank"' : ''}>
+            <span class="writing-row-left">
+              <span class="writing-title">${entry.title}</span>
+              ${isNew ? '<img src="Assets/Icons/new.svg" class="writing-tag-new" alt="New" />' : ''}
+            </span>
+            <span class="writing-date">${dateStr}</span>
+          </a>
         `;
 
-        card.addEventListener('click', () => {
-          if (entry.external) {
-            window.open(entry.href, '_blank');
-          } else {
-            // page-transition fade-out
+        // Internal nav fade-out
+        if (!entry.external) {
+          li.querySelector('a').addEventListener('click', e => {
+            e.preventDefault();
             document.body.style.transition = 'opacity 0.18s ease';
             document.body.style.opacity = '0';
             setTimeout(() => { window.location.href = entry.href; }, 180);
-          }
-        });
+          });
+        }
 
-        grid.appendChild(card);
+        list.appendChild(li);
       });
     }
 
@@ -738,15 +1190,40 @@
       renderCards();
     });
 
-    // ── Theme ──
+    // ── AI filter ──
+    document.getElementById('aiFilterBtn').addEventListener('click', () => {
+      aiOnly = !aiOnly;
+      document.getElementById('aiFilterBtn').classList.toggle('active', aiOnly);
+      renderCards();
+    });
+
+    // ── View toggle ──
+    const viewToggle = document.getElementById('viewToggle');
+    // Restore saved view button state
+    viewToggle.querySelectorAll('.view-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.view === activeView);
+    });
+    viewToggle.addEventListener('click', e => {
+      const btn = e.target.closest('.view-btn');
+      if (!btn || btn.dataset.view === activeView) return;
+      viewToggle.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeView = btn.dataset.view;
+      localStorage.setItem('view', activeView);
+      renderCards();
+    });
+
+    // ── Sunshine toggle ──
     const html = document.documentElement;
-    const saved = localStorage.getItem('theme') || 'light';
-    html.setAttribute('data-theme', saved);
+    let sunshineOn = localStorage.getItem('sunshine') === 'on';
+    if (sunshineOn) html.classList.add('sunshine-on');
 
     document.getElementById('themeToggle').addEventListener('click', () => {
-      const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-      html.setAttribute('data-theme', next);
-      localStorage.setItem('theme', next);
+      sunshineOn = !sunshineOn;
+      html.classList.toggle('sunshine-on', sunshineOn);
+      localStorage.setItem('sunshine', sunshineOn ? 'on' : 'off');
+      const video = document.getElementById('sun-overlay');
+      if (sunshineOn) { video.currentTime = 0; video.play(); }
     });
 
     // ── Fade in on load ──
@@ -757,6 +1234,7 @@
     });
 
     // ── Init ──
+    renderWriting();
     renderCards();
 
     // ── Sneak-peek animation ──
