@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Animating in Public — Emil Kowalski</title>
+  <style>
+    @font-face { font-family: 'Switzer'; src: url('Assets/Fonts/Switzer/Switzer-Regular.otf') format('opentype'); font-weight: 400; font-style: normal; }
+    @font-face { font-family: 'Switzer'; src: url('Assets/Fonts/Switzer/Switzer-Italic.otf') format('opentype'); font-weight: 400; font-style: italic; }
+    @font-face { font-family: 'Switzer'; src: url('Assets/Fonts/Switzer/Switzer-Medium.otf') format('opentype'); font-weight: 500; font-style: normal; }
+    @font-face { font-family: 'Switzer'; src: url('Assets/Fonts/Switzer/Switzer-MediumItalic.otf') format('opentype'); font-weight: 500; font-style: italic; }
+    @font-face { font-family: 'Switzer'; src: url('Assets/Fonts/Switzer/Switzer-Semibold.otf') format('opentype'); font-weight: 600; font-style: normal; }
+    @font-face { font-family: 'Switzer'; src: url('Assets/Fonts/Switzer/Switzer-Bold.otf') format('opentype'); font-weight: 700; font-style: normal; }
+    @font-face { font-family: 'Switzer'; src: url('Assets/Fonts/Switzer/Switzer-Light.otf') format('opentype'); font-weight: 300; font-style: normal; }
+  </style>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #FAFAFA;
+      --bg-subtle: #FAFAFA;
+      --border: #e8e8e4;
+      --text: #1a1a18;
+      --text-muted: #787872;
+      --text-faint: #b0b0a8;
+      --accent: #1a1a18;
+      --tag-bg: #f0f0ec;
+      --tag-text: #5a5a54;
+      --hover-bg: #f4f4f0;
+      --toggle-bg: #e8e8e4;
+      --link: #1a1a18;
+      --code-bg: #f4f4f0;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0f0f0d;
+      --bg-subtle: #161614;
+      --border: #262622;
+      --text: #e8e8e2;
+      --text-muted: #7a7a72;
+      --text-faint: #3e3e38;
+      --accent: #e8e8e2;
+      --tag-bg: #1e1e1a;
+      --tag-text: #8a8a82;
+      --hover-bg: #161614;
+      --toggle-bg: #262622;
+      --link: #e8e8e2;
+      --code-bg: #1e1e1a;
+    }
+
+    html { font-size: 15px; }
+
+    body {
+      font-family: 'Switzer', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      transition: background 0.25s, color 0.25s, opacity 0.2s ease;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--link); text-decoration: none; }
+
+    /* ── Layout ── */
+    .wrapper {
+      max-width: 660px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ── Nav ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 28px 0 0;
+    }
+
+    .nav-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      text-decoration: none;
+      transition: color 0.12s;
+    }
+
+    .nav-togglename {
+      font-size: 13px;
+      font-weight: 500;
+      color: #787872;
+      letter-spacing: -0.01em;
+    }
+
+    .nav-name:hover { color: var(--text-muted); }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .nav-role {
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    .theme-toggle {
+      width: 32px;
+      height: 18px;
+      background: var(--toggle-bg);
+      border-radius: 9px;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .theme-toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    [data-theme="dark"] .theme-toggle::after {
+      transform: translateX(14px);
+    }
+
+    /* ── Article header ── */
+    .article-header {
+      padding: 52px 0 36px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+      text-decoration: none;
+      transition: color 0.12s;
+    }
+    .back-link:hover { color: var(--text); }
+    .back-link:hover .back-arrow { transform: translateX(-2px); }
+
+    .back-arrow {
+      display: inline-block;
+      transition: transform 0.12s;
+    }
+
+    .article-type {
+      font-size: 11px;
+      color: var(--text-faint);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-family: 'Switzer', system-ui, sans-serif;
+      font-size: 30px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      line-height: 1.25;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+
+    .article-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .article-date {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .article-tag {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: var(--tag-bg);
+      color: var(--tag-text);
+    }
+
+    /* ── Article body ── */
+    .article-body {
+      padding: 40px 0 48px;
+    }
+
+    .article-body p {
+      font-family: 'Switzer', system-ui, sans-serif;
+      font-size: 16px;
+      line-height: 1.75;
+      color: var(--text);
+      margin-bottom: 24px;
+    }
+
+    .article-body p:last-child { margin-bottom: 0; }
+
+    .article-body a {
+      border-bottom: 1px solid var(--border);
+      transition: border-color 0.12s;
+    }
+    .article-body a:hover { border-color: var(--text-muted); }
+
+    .article-body h2 {
+      font-family: 'Switzer', system-ui, sans-serif;
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.3;
+      color: var(--text);
+      margin-top: 44px;
+      margin-bottom: 16px;
+    }
+
+    .article-body h3 {
+      font-family: 'Switzer', system-ui, sans-serif;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-top: 32px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .article-body hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 36px 0;
+    }
+
+    .article-body img {
+      width: 100%;
+      border-radius: 6px;
+      margin: 28px 0;
+      display: block;
+      border: 1px solid var(--border);
+    }
+
+    .article-body em {
+      font-style: italic;
+    }
+
+    .article-body strong {
+      font-weight: 500;
+    }
+
+    .article-body code {
+      font-family: 'Switzer', system-ui, sans-serif;
+      font-size: 0.85em;
+      background: var(--code-bg);
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: var(--text-muted);
+    }
+
+    .article-body blockquote {
+      border-left: 2px solid var(--border);
+      padding-left: 20px;
+      margin: 28px 0;
+      color: var(--text-muted);
+    }
+
+    /* ── Thanks / attribution ── */
+    .article-attribution {
+      font-family: 'Switzer', system-ui, sans-serif;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-top: 36px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .article-attribution a {
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Prev / Next ── */
+    .article-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 28px 0 56px;
+      border-top: 1px solid var(--border);
+      gap: 16px;
+    }
+
+    .article-nav-link {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      transition: color 0.12s;
+      max-width: 240px;
+    }
+    .article-nav-link:hover { color: var(--text); }
+
+    .article-nav-label {
+      font-size: 10px;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .article-nav-title {
+      font-family: 'Switzer', system-ui, sans-serif;
+      font-size: 13.5px;
+      font-weight: 500;
+      line-height: 1.3;
+    }
+
+    /* ── Hover & transition animations ── */
+    .article-nav-link {
+      transition: color 0.15s, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .article-nav-link:hover { transform: translateY(-2px); }
+    .article-nav-link.prev:hover { transform: translateX(-3px); }
+    .article-nav-link.next:hover { transform: translateX(3px); }
+
+    .article-body a {
+      transition: border-color 0.12s, opacity 0.12s;
+    }
+    .article-body a:hover { opacity: 0.72; }
+
+    .article-nav-link.next { text-align: right; }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 20px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .footer-name { font-size: 11px; color: var(--text-faint); }
+
+    .footer-links { display: flex; gap: 16px; }
+
+    .footer-link {
+      font-size: 11px;
+      color: var(--text-faint);
+      text-decoration: none;
+      transition: color 0.12s;
+    }
+    .footer-link:hover { color: var(--text-muted); }
+
+    @media (max-width: 480px) {
+      h1 { font-size: 24px; }
+      nav { flex-wrap: wrap; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+
+    <!-- Nav -->
+    <nav>
+      <a href="index.html" class="nav-name">Cherry's Vault</a>
+      <div class="nav-right">
+        <span class="nav-togglename">Add sunshine?</span>
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme"></button>
+      </div>
+    </nav>
+
+    <!-- Article Header -->
+    <div class="article-header">
+      <a href="index.html" class="back-link">
+        <span class="back-arrow">←</span> Back
+      </a>
+      <h1>Animating in Public</h1>
+      <div class="article-meta">
+        <span class="article-date">Apr 30, 2023</span>
+        <span class="article-tag">article</span>
+      </div>
+    </div>
+
+    <!-- Article Body -->
+    <article class="article-body">
+      <p>
+        Back in 2021, when I was just starting my career, I was working at an agency building apps with Vue.js,
+        but I really wanted to work with React.
+      </p>
+
+      <p>
+        I had no React experience though, so I started learning it. I watched
+        <a href="https://www.youtube.com/watch?v=MxR5I5_hOKk" target="_blank">React2025</a>
+        and lots of other videos. I even built a few projects.
+      </p>
+
+      <p>
+        <a href="https://ui-snippets.dev" target="_blank">ui-snippets.dev</a> was my first project that I shared publicly.
+      </p>
+
+      <p>
+        After practicing for a while, I felt confident and applied to a local React company. I got rejected.
+        It sucked, especially since I didn't even make it to a coding interview.
+      </p>
+
+      <p>
+        I assumed my resume was not strong enough, so I decided to start posting things I built on Twitter.
+        The idea was that I would apply to a company and include my Twitter profile in the application so that
+        people would see that I'm actually really into coding.
+      </p>
+
+      <p>
+        But something else happened...
+      </p>
+
+      <hr />
+
+      <p>
+        My first few tweets didn't get much traction, but then I posted a video where I recreated Vercel's tab
+        component, and it changed <em>everything</em>.
+      </p>
+
+      <p>
+        I suddenly got a lot of messages from people saying that they liked my work and that they wanted to work
+        with me. One of them was <a href="https://x.com/jrdngonen" target="_blank">Jordan</a> from
+        <a href="https://compoundplanning.com" target="_blank">Compound</a>.
+      </p>
+
+      <p>
+        I went through the interview process and landed my first job at a VC-backed startup.
+      </p>
+
+      <p>
+        I got to work with React, the framework I wanted to work with. I got better at it and worked on tons of
+        interesting projects like the Command Menu or Compound's design system — that's how the idea for
+        Sonner was initially born.
+      </p>
+
+      <p>
+        While at Compound, I kept sharing my work. After a while I got a message from Guillermo, the CEO of Vercel.
+      </p>
+
+      <p>
+        That led me to join Vercel as a design engineer on the design team in late 2022.
+      </p>
+
+      <p>
+        I got to work on lots of great things there like Next.js docs and the new learn experience,
+        Geist, the Vercel dashboard, or even a fun hackathon project.
+      </p>
+
+      <p>
+        I also gained more confidence in my skills, enough to build two open-source components:
+        <a href="https://sonner.emilkowal.ski" target="_blank">Sonner</a> and
+        <a href="https://vaul.emilkowal.ski" target="_blank">Vaul</a>.
+      </p>
+
+      <hr />
+
+      <p>
+        If I didn't share that Vercel tab component in 2021, you wouldn't be reading this post.
+      </p>
+
+      <p>
+        You probably wouldn't even know I exist.
+      </p>
+
+      <p>
+        I wouldn't get to work at companies like Compound, Vercel, and Linear.
+      </p>
+
+      <p>
+        I wouldn't have created Sonner and Vaul.
+      </p>
+
+      <p>
+        I definitely wouldn't launch a <a href="https://animations.dev" target="_blank">course</a>.
+      </p>
+
+      <p>
+        Sharing my work exposed me to opportunities I would never have had otherwise.
+      </p>
+
+      <p>
+        It changed my life.
+      </p>
+
+      <p>
+        You should try it too. Maybe it will change yours as well.
+      </p>
+
+      <p>–Cherry</p>
+
+      <p class="article-attribution">
+        Thanks to <a href="https://x.com/julianlehr" target="_blank">Julian</a> for feedback on this post.
+      </p>
+    </article>
+
+    <!-- Prev / Next -->
+    <nav class="article-nav">
+      <a href="#" class="article-nav-link prev">
+        <span class="article-nav-label">← Previous</span>
+        <span class="article-nav-title">The Magic of Clip Path</span>
+      </a>
+      <a href="#" class="article-nav-link next">
+        <span class="article-nav-label">Next →</span>
+        <span class="article-nav-title">7 Practical Animation Tips</span>
+      </a>
+    </nav>
+
+    <!-- Footer -->
+    <footer>
+      <span class="footer-name"> Cherry Hu</span>
+      <div class="footer-links">
+        <a href="https://twitter.com/emilkowalski" target="_blank" class="footer-link">Twitter</a>
+        <a href="mailto:hello@emilkowal.ski" class="footer-link">Email</a>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    // Theme
+    const html = document.documentElement;
+    const saved = localStorage.getItem('theme') || 'light';
+    html.setAttribute('data-theme', saved);
+
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+    });
+
+    // Page fade-in
+    document.body.style.opacity = '0';
+    document.body.style.transition = 'opacity 0.22s ease';
+    window.addEventListener('load', () => { document.body.style.opacity = '1'; });
+
+    // Fade-out on back link / nav links
+    document.querySelectorAll('a[href]').forEach(link => {
+      const href = link.getAttribute('href');
+      if (!href || href.startsWith('http') || href.startsWith('mailto') || href === '#') return;
+      link.addEventListener('click', e => {
+        e.preventDefault();
+        document.body.style.opacity = '0';
+        setTimeout(() => { window.location.href = href; }, 200);
+      });
+    });
+  </script>
+</body>
+</html>

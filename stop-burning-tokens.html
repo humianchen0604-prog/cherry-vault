@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stop burning tokens in Claude — Cherry's Vault</title>
+  <style>
+    @font-face { font-family: 'Switzer'; src: url('Assets/Fonts/Switzer/Switzer-Regular.otf') format('opentype'); font-weight: 400; font-style: normal; }
+    @font-face { font-family: 'Switzer'; src: url('Assets/Fonts/Switzer/Switzer-Italic.otf') format('opentype'); font-weight: 400; font-style: italic; }
+    @font-face { font-family: 'Switzer'; src: url('Assets/Fonts/Switzer/Switzer-Medium.otf') format('opentype'); font-weight: 500; font-style: normal; }
+    @font-face { font-family: 'Switzer'; src: url('Assets/Fonts/Switzer/Switzer-MediumItalic.otf') format('opentype'); font-weight: 500; font-style: italic; }
+    @font-face { font-family: 'Switzer'; src: url('Assets/Fonts/Switzer/Switzer-Semibold.otf') format('opentype'); font-weight: 600; font-style: normal; }
+    @font-face { font-family: 'Switzer'; src: url('Assets/Fonts/Switzer/Switzer-Bold.otf') format('opentype'); font-weight: 700; font-style: normal; }
+    @font-face { font-family: 'Switzer'; src: url('Assets/Fonts/Switzer/Switzer-Light.otf') format('opentype'); font-weight: 300; font-style: normal; }
+  </style>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #FAFAFA;
+      --bg-subtle: #FAFAFA;
+      --border: #e8e8e4;
+      --text: #1a1a18;
+      --text-muted: #787872;
+      --text-faint: #b0b0a8;
+      --accent: #1a1a18;
+      --tag-bg: #f0f0ec;
+      --tag-text: #5a5a54;
+      --hover-bg: #f4f4f0;
+      --toggle-bg: #e8e8e4;
+      --link: #1a1a18;
+      --code-bg: #f4f4f0;
+      --toast-bg: #ffffff;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0f0f0d;
+      --bg-subtle: #161614;
+      --border: #262622;
+      --text: #e8e8e2;
+      --text-muted: #7a7a72;
+      --text-faint: #3e3e38;
+      --accent: #e8e8e2;
+      --tag-bg: #1e1e1a;
+      --tag-text: #8a8a82;
+      --hover-bg: #161614;
+      --toggle-bg: #262622;
+      --link: #e8e8e2;
+      --code-bg: #1e1e1a;
+      --toast-bg: #1a1a1a;
+    }
+
+    html { font-size: 15px; }
+
+    body {
+      font-family: 'Switzer', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      transition: background 0.25s, color 0.25s, opacity 0.2s ease;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--link); text-decoration: none; }
+
+    .wrapper {
+      max-width: 660px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ── Nav ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 28px 0 0;
+    }
+
+    .nav-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      text-decoration: none;
+      transition: color 0.12s;
+    }
+    .nav-name:hover { color: var(--text-muted); }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .theme-toggle {
+      width: 32px;
+      height: 18px;
+      background: #1a1a18;
+      border-radius: 9px;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      flex-shrink: 0;
+      transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .theme-toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #3e3e3a;
+      transition: transform 0.35s cubic-bezier(0.34, 1.3, 0.64, 1), background 0.3s ease;
+    }
+    [data-theme="dark"] .theme-toggle { background: #e8e8e4; }
+    [data-theme="dark"] .theme-toggle::after {
+      transform: translateX(14px);
+      background-color: #e8e8e4;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 14 14'%3E%3Ccircle cx='7' cy='7' r='2.4' fill='%231a1a18'/%3E%3Cg stroke='%231a1a18' stroke-width='1.3' stroke-linecap='round'%3E%3Cline x1='7' y1='0.5' x2='7' y2='2.8'/%3E%3Cline x1='7' y1='11.2' x2='7' y2='13.5'/%3E%3Cline x1='0.5' y1='7' x2='2.8' y2='7'/%3E%3Cline x1='11.2' y1='7' x2='13.5' y2='7'/%3E%3Cline x1='2.2' y1='2.2' x2='3.9' y2='3.9'/%3E%3Cline x1='10.1' y1='10.1' x2='11.8' y2='11.8'/%3E%3Cline x1='11.8' y1='2.2' x2='10.1' y2='3.9'/%3E%3Cline x1='3.9' y1='10.1' x2='2.2' y2='11.8'/%3E%3C/g%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 10px 10px;
+    }
+
+    /* ── Article header ── */
+    .article-header {
+      padding: 52px 0 36px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+      text-decoration: none;
+      transition: color 0.12s;
+    }
+    .back-link:hover { color: var(--text); }
+
+    .back-arrow {
+      display: inline-block;
+      transition: transform 0.12s;
+    }
+
+    h1 {
+      font-family: 'Switzer', system-ui, sans-serif;
+      font-size: 30px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      line-height: 1.25;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+
+    .article-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .article-date {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .article-tag {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: var(--tag-bg);
+      color: var(--tag-text);
+    }
+
+    /* ── Article body ── */
+    .article-body {
+      padding: 40px 0 48px;
+    }
+
+    .article-body p {
+      font-size: 16px;
+      line-height: 1.75;
+      color: var(--text);
+      margin-bottom: 24px;
+    }
+
+    .article-body a {
+      border-bottom: 1px solid var(--border);
+      transition: border-color 0.12s, opacity 0.12s;
+    }
+    .article-body a:hover { border-color: var(--text-muted); opacity: 0.72; }
+
+    .article-body h2 {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.3;
+      color: var(--text);
+      margin-top: 44px;
+      margin-bottom: 16px;
+    }
+
+    .article-body h3 {
+      font-size: 16px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      line-height: 1.3;
+      color: var(--text);
+      margin-top: 100px;
+      margin-bottom: 24px;
+    }
+
+    .article-body hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 36px 0;
+    }
+
+    .article-body strong { font-weight: 500; }
+
+    /* ── Before / After block ── */
+    .ba-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 28px 0;
+    }
+
+    .ba-block {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .ba-img {
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      object-fit: cover;
+      object-position: top;
+      display: block;
+    }
+
+    .ba-img2 {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      object-fit: cover;
+      object-position: top;
+      display: block;
+    }
+
+    .ba-caption {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .ba-label {
+      font-size: 11px;
+      color: var(--text-faint);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.12s ease;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .ba-label:hover { color: var(--text-muted); }
+
+    .copy-icon-mask {
+      width: 12px;
+      height: 12px;
+      background-color: currentColor;
+      -webkit-mask: url('Assets/Icons/copy.svg') no-repeat center;
+      mask: url('Assets/Icons/copy.svg') no-repeat center;
+      -webkit-mask-size: contain;
+      mask-size: contain;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    .ba-desc {
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--text-muted);
+    }
+
+    /* ── Numbered steps ── */
+    .steps {
+      list-style: none;
+      margin: 20px 0 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .steps li {
+      display: flex;
+      gap: 14px;
+      align-items: baseline;
+    }
+
+    .step-num {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-faint);
+      flex-shrink: 0;
+      width: 16px;
+    }
+
+    .step-text {
+      font-size: 15px;
+      line-height: 1.65;
+      color: var(--text);
+    }
+
+    /* ── Prev / Next ── */
+    .article-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 28px 0 56px;
+      border-top: 1px solid var(--border);
+      gap: 16px;
+    }
+
+    .article-nav-link {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      max-width: 240px;
+      transition: color 0.15s, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .article-nav-link:hover { color: var(--text); }
+    .article-nav-link.prev:hover { transform: translateX(-3px); }
+    .article-nav-link.next { text-align: right; }
+
+    .article-nav-label {
+      font-size: 10px;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .article-nav-title {
+      font-size: 13.5px;
+      font-weight: 500;
+      line-height: 1.3;
+    }
+
+    /* --- Toast --- */
+    #toast {
+      visibility: hidden;
+      width: max-content;
+      max-width: 90vw;
+      background-color: var(--toast-bg);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 14px;
+      position: fixed;
+      z-index: 1000;
+      left: 50%;
+      bottom: 30px;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.12), 0 0 1px rgba(0,0,0,0.2);
+      border: 0.5px solid var(--border);
+    }
+
+    .toast-icon {
+      width: 14px;
+      height: 14px;
+      background-color: var(--text);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    #toast.show {
+      visibility: visible;
+      animation: slidein 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1) forwards, 
+                 fadeout 0.4s 2.6s forwards;
+    }
+
+    @keyframes slidein { from { bottom: 0; opacity: 0; } to { bottom: 30px; opacity: 1; } }
+    @keyframes fadeout { from { bottom: 30px; opacity: 1; } to { bottom: 0; opacity: 0; } }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 20px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .footer-name { font-size: 11px; color: var(--text-faint); }
+    .footer-links { display: flex; gap: 16px; }
+    .footer-link { font-size: 11px; color: var(--text-faint); transition: color 0.12s; }
+    .footer-link:hover { color: var(--text-muted); }
+
+    @media (max-width: 480px) {
+      .ba-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <nav>
+      <a href="index.html" class="nav-name">Cherry Hu</a>
+      <div class="nav-right">
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme"></button>
+      </div>
+    </nav>
+
+    <div class="article-header">
+      <a href="index.html" class="back-link"><span class="back-arrow">←</span> Back</a>
+      <h1>Stop Burning Tokens in Claude</h1>
+      <div class="article-meta">
+        <span class="article-date">Mar 29, 2026</span>
+        <span class="article-tag">article</span>
+      </div>
+    </div>
+
+    <article class="article-body">
+      <p>Claude doesn't count your messages, it counts tokens. One token is roughly three quarters of a word. Every message you send, and every response Claude sends back, adds to the running total that Claude has to re-read from scratch on every subsequent turn.</p>
+
+      <p>A short conversation is cheap. A long one with back and forth corrections can burn through days of tokens in an afternoon.</p>
+      <img src="Assets/Entryimage/token.png" alt="Before" class="ba-img2" />
+
+      <hr />
+
+      <h2>Habit 1: Edit your message, do not send a follow-up</h2>
+      <p>When Claude gets something wrong, the instinct is to send a correction in a new message. This is the most expensive habit you can have. Every new message adds to the conversation history.</p>
+
+      <div class="ba-grid">
+        <div class="ba-block">
+          <img src="Assets/Entryimage/Before.png" alt="Before" class="ba-img" />
+          <div class="ba-caption">
+            <span class="ba-label">Before</span>
+            <span class="ba-desc">Three turns in and the context is already heavy.</span>
+          </div>
+        </div>
+        <div class="ba-block">
+          <img src="Assets/Entryimage/After.png" alt="After" class="ba-img" />
+          <div class="ba-caption">
+            <span class="ba-label">After</span>
+            <span class="ba-desc">The failed response is replaced, not added.</span>
+          </div>
+        </div>
+      </div>
+
+      <p>Over a long working session this single habit reduces token use by <strong>80 to 90 percent</strong>.</p>
+
+      <hr />
+
+      <h2>Habit 2: Start a fresh chat every 15 to 20 messages</h2>
+      <p>Conversations get exponentially heavier the longer they run. When a chat starts feeling sluggish, it is time for a reset.</p>
+
+      <div class="ba-block">
+        <img src="Assets/Entryimage/fresh chat.png" alt="Reset Process" class="ba-img" />
+        <div class="ba-caption">
+          <span class="ba-label" onclick="copyText(this, 'Task: Generate a Session Transfer Summary\nI need to move this work to a new window. Please generate a single, comprehensive summary of our conversation so far that I can paste into a new chat. Your summary must include:\n\nProject Overview: A high-level description of the current project.\nVisual & Interaction Constraints: Our specific aesthetic (minimalist, grid-based, typography) and the tools being used (Framer, Rive, Figma).\nKey Decisions Made: A bulleted list of any finalized decisions.\nPending Tasks: What we were about to do next.\nFormat the output as a System Prompt for the next AI assistant.')">
+            <span class="copy-icon-mask"></span> Copy prompt
+          </span>
+        </div>
+      </div>
+
+      <ol class="steps">
+        <li><span class="step-num">1</span><span class="step-text">Ask Claude: <em>summarise where we are up to in four sentences.</em></span></li>
+        <li><span class="step-num">2</span><span class="step-text">Open a new chat.</span></li>
+        <li><span class="step-num">3</span><span class="step-text">Paste the summary in as your first message and continue.</span></li>
+      </ol>
+
+      <hr />
+
+      <h2>Habit 3: Batch your questions</h2>
+      <p>Three separate messages means three separate context loads. One message with three questions means one. List everything you need in a single message.</p>
+
+      <div class="ba-block">
+        <img src="Assets/Entryimage/Batch your questions.png" alt="Batching" class="ba-img" />
+        <div class="ba-caption">
+          <span class="ba-label" onclick="copyText(this, '1. Can you make this paragraph shorter? 2. Suggest a better headline. 3. What is missing from this brief? One send. One context load. Faster and cheaper.')">
+            <span class="copy-icon-mask"></span> Copy prompt
+          </span>
+          <span class="ba-desc">Claude sees relationships between questions for unified answers.</span>
+        </div>
+      </div>
+
+      <hr />
+
+      <h2>Habit 4: Upload recurring files to Projects</h2>
+      <p>Projects cache your uploaded files so they do not eat into your token limit on each individual conversation. Anything you upload more than twice should live in a Project.</p>
+
+      <hr />
+
+      <h2>Habit 5: Set up Memory and User Preferences</h2>
+      <p>Every conversation started without context costs 3 to 5 messages just re-establishing who you are and how you work.</p>
+      <p>Go to Settings, write it once, stop paying for it every single time.</p>
+
+      <h3 style="display:inline-flex; align-items:center; gap:6px;">
+        Start practicing the act of saving tokens today
+        <img src="Assets/Icons/Smile.svg" alt="" style="width:14px; height:14px; flex-shrink:0; display:inline-block;" />
+      </h3>
+
+    </article>
+
+    <div id="toast">
+      <div class="toast-icon">
+        <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1.5 4L4 6.5L8.5 1.5" stroke="var(--bg)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <span>Prompt copied to clipboard!</span>
+    </div>
+
+    <nav class="article-nav">
+      <a href="animating-in-public.html" class="article-nav-link prev">
+        <span class="article-nav-label">← Previous</span>
+        <span class="article-nav-title">Animating in Public</span>
+      </a>
+    </nav>
+
+    <footer>
+      <span class="footer-name">Cherry Hu</span>
+      <div class="footer-links">
+        <a href="https://twitter.com" target="_blank" class="footer-link">Twitter</a>
+        <a href="https://github.com" target="_blank" class="footer-link">GitHub</a>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // Theme logic
+    const html = document.documentElement;
+    const saved = localStorage.getItem('theme') || 'light';
+    html.setAttribute('data-theme', saved);
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+    });
+
+    // Reusable Copy Logic
+    function copyText(btn, text) {
+      navigator.clipboard.writeText(text).then(() => {
+        const toast = document.getElementById("toast");
+        toast.classList.add("show");
+        setTimeout(() => { toast.classList.remove("show"); }, 3000);
+      });
+    }
+
+    // Page effects
+    document.body.style.opacity = '0';
+    document.body.style.transition = 'opacity 0.22s ease';
+    window.addEventListener('load', () => { document.body.style.opacity = '1'; });
+  </script>
+
+</body>
+</html>
+```
